@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-shiori/shiori/internal/dependencies"
 	"github.com/go-shiori/shiori/internal/model"
+	"github.com/go-shiori/shiori/internal/pkg"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -48,7 +49,7 @@ func (d *AccountsDomain) CheckToken(ctx context.Context, userJWT string) (*model
 	return nil, fmt.Errorf("error obtaining user from JWT claims")
 }
 
-func (d *AccountsDomain) GetAccountFromCredentials(ctx context.Context, username, password string) (*model.Account, error) {
+func (d *AccountsDomain) GetAccountFromCredentials(ctx context.Context, username, password string, code int32) (*model.Account, error) {
 	account, _, err := d.deps.Database.GetAccount(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("username and password do not match")
@@ -56,6 +57,12 @@ func (d *AccountsDomain) GetAccountFromCredentials(ctx context.Context, username
 
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(password)); err != nil {
 		return nil, fmt.Errorf("username and password do not match")
+	}
+
+	if account.Config.GoogleSecret != "" {
+		if !pkg.VerifyCode(account.Config.GoogleSecret, code) {
+			return nil, fmt.Errorf("google auth failed")
+		}
 	}
 
 	return &account, nil

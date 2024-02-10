@@ -55,6 +55,9 @@ var template = `
                     <a title="Change password" @click="showDialogChangePassword(account)">
                         <i class="fa fas fa-fw fa-key"></i>
                     </a>
+ 					<a title="Change Google Secret" @click="showDialogChangeGoogleSecret(account)">
+                        <i class="fa fas fa-fw fa-lock"></i>
+                    </a>
                     <a title="Delete account" @click="showDialogDeleteAccount(account, idx)">
                         <i class="fa fas fa-fw fa-trash-alt"></i>
                     </a>
@@ -300,6 +303,81 @@ export default {
 						username: account.username,
 						oldPassword: data.oldPassword,
 						newPassword: data.password,
+						owner: account.owner,
+					};
+
+					this.dialog.loading = true;
+					fetch(new URL("api/accounts", document.baseURI), {
+						method: "put",
+						body: JSON.stringify(request),
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: "Bearer " + localStorage.getItem("shiori-token"),
+						},
+					})
+						.then((response) => {
+							if (!response.ok) throw response;
+							return response;
+						})
+						.then(() => {
+							this.dialog.loading = false;
+							this.dialog.visible = false;
+						})
+						.catch((err) => {
+							this.dialog.loading = false;
+							this.getErrorMessage(err).then((msg) => {
+								this.showErrorDialog(msg);
+							});
+						});
+				},
+			});
+		},
+		showDialogChangeGoogleSecret(account) {
+			this.showDialog({
+				title: "Change Google Secret",
+				content: "Input new google secret :",
+				fields: [
+					{
+						name: "oldPassword",
+						label: "Old password(For Auth)",
+						type: "password",
+						value: "",
+					},
+					{
+						name: "googleSecret",
+						label: "New Secret",
+						type: "password",
+						value: "",
+					},
+					{
+						name: "repeat",
+						label: "Repeat Secret",
+						type: "password",
+						value: "",
+					},
+				],
+				mainText: "OK",
+				secondText: "Cancel",
+				mainClick: (data) => {
+					if (data.oldPassword === "") {
+						this.showErrorDialog("Old password must not empty");
+						return;
+					}
+
+					if (data.googleSecret === "") {
+						this.showErrorDialog("New google secret must not empty");
+						return;
+					}
+
+					if (data.googleSecret !== data.repeat) {
+						this.showErrorDialog("Password does not match");
+						return;
+					}
+
+					var request = {
+						username: account.username,
+						oldPassword: data.oldPassword,
+						googleSecret: data.googleSecret,
 						owner: account.owner,
 					};
 

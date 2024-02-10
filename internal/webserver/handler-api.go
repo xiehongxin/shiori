@@ -18,7 +18,6 @@ import (
 	"github.com/go-shiori/shiori/internal/dependencies"
 	"github.com/go-shiori/shiori/internal/model"
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func downloadBookmarkContent(deps *dependencies.Dependencies, book *model.BookmarkDTO, dataDir string, request *http.Request, keepTitle, keepExcerpt bool) (*model.BookmarkDTO, error) {
@@ -494,10 +493,11 @@ func (h *Handler) ApiUpdateAccount(w http.ResponseWriter, r *http.Request, ps ht
 
 	// Decode request
 	request := struct {
-		Username    string `json:"username"`
-		OldPassword string `json:"oldPassword"`
-		NewPassword string `json:"newPassword"`
-		Owner       bool   `json:"owner"`
+		Username     string `json:"username"`
+		OldPassword  string `json:"oldPassword"`
+		NewPassword  string `json:"newPassword"`
+		GoogleSecret string `json:"googleSecret"`
+		Owner        bool   `json:"owner"`
 	}{}
 
 	err = json.NewDecoder(r.Body).Decode(&request)
@@ -512,9 +512,20 @@ func (h *Handler) ApiUpdateAccount(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	// Compare old password with database
-	err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(request.OldPassword))
-	if err != nil {
-		panic(fmt.Errorf("old password doesn't match"))
+	//err = bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(request.OldPassword))
+	//if err != nil {
+	//	panic(fmt.Errorf("old password doesn't match"))
+	//}
+
+	// only update google secret
+	fmt.Println("secret", request.GoogleSecret)
+	if request.GoogleSecret != "" {
+		account.Password = request.OldPassword
+		account.Owner = request.Owner
+		account.Config.GoogleSecret = request.GoogleSecret
+		err = h.DB.SaveAccount(ctx, account)
+		checkError(err)
+		return
 	}
 
 	// Save new password to database

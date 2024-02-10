@@ -3,6 +3,7 @@ package api_v1
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,6 +31,7 @@ func (r *AuthAPIRoutes) Setup(group *gin.RouterGroup) model.Routes {
 type loginRequestPayload struct {
 	Username   string `json:"username"    validate:"required"`
 	Password   string `json:"password"    validate:"required"`
+	GoogleCode string `json:"google_code"`
 	RememberMe bool   `json:"remember_me"`
 }
 
@@ -75,7 +77,13 @@ func (r *AuthAPIRoutes) loginHandler(c *gin.Context) {
 		return
 	}
 
-	account, err := r.deps.Domains.Auth.GetAccountFromCredentials(c, payload.Username, payload.Password)
+	code, err := strconv.Atoi(payload.GoogleCode)
+	if err != nil {
+		response.SendError(c, http.StatusBadRequest, "code invalid")
+		return
+	}
+
+	account, err := r.deps.Domains.Auth.GetAccountFromCredentials(c, payload.Username, payload.Password, int32(code))
 	if err != nil {
 		response.SendError(c, http.StatusBadRequest, err.Error())
 		return

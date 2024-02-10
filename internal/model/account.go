@@ -12,19 +12,20 @@ type Account struct {
 	Username string     `db:"username" json:"username"`
 	Password string     `db:"password" json:"password,omitempty"`
 	Owner    bool       `db:"owner"    json:"owner"`
-	Config   UserConfig `db:"config"               json:"config"`
+	Config   UserConfig `db:"config"   json:"config"`
 }
 
 type UserConfig struct {
-	ShowId        bool `json:"ShowId"`
-	ListMode      bool `json:"ListMode"`
-	HideThumbnail bool `json:"HideThumbnail"`
-	HideExcerpt   bool `json:"HideExcerpt"`
-	NightMode     bool `json:"NightMode"`
-	KeepMetadata  bool `json:"KeepMetadata"`
-	UseArchive    bool `json:"UseArchive"`
-	CreateEbook   bool `json:"CreateEbook"`
-	MakePublic    bool `json:"MakePublic"`
+	ShowId        bool   `json:"ShowId"`
+	ListMode      bool   `json:"ListMode"`
+	HideThumbnail bool   `json:"HideThumbnail"`
+	HideExcerpt   bool   `json:"HideExcerpt"`
+	NightMode     bool   `json:"NightMode"`
+	KeepMetadata  bool   `json:"KeepMetadata"`
+	UseArchive    bool   `json:"UseArchive"`
+	CreateEbook   bool   `json:"CreateEbook"`
+	MakePublic    bool   `json:"MakePublic"`
+	GoogleSecret  string `json:"GoogleSecret"`
 }
 
 func (c *UserConfig) Scan(value interface{}) error {

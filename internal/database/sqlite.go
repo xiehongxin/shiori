@@ -657,7 +657,7 @@ func (db *SQLiteDatabase) SaveAccount(ctx context.Context, account model.Account
 		_, err = tx.Exec(`INSERT INTO account
 		(username, password, owner, config) VALUES (?, ?, ?, ?)
 		ON CONFLICT(username) DO UPDATE SET
-		password = ?, owner = ?`,
+		password = ?, owner = ?, config=?`,
 			account.Username, hashedPassword, account.Owner, account.Config,
 			hashedPassword, account.Owner, account.Config)
 		return errors.WithStack(err)
